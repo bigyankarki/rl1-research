@@ -40,7 +40,8 @@ class QLearningAgent(BaseAgent):
         
         # Choose action using epsilon greedy.
         state = observation
-        current_q = self.q[state,:]
+        current_s = np.where(state == 1)[0][0]
+        current_q = self.q[current_s,:]
         if self.rand_generator.rand() < self.epsilon:
             action = self.rand_generator.randint(self.num_actions)
         else:
@@ -62,7 +63,8 @@ class QLearningAgent(BaseAgent):
         
         # Choose action using epsilon greedy.
         state = observation
-        current_q = self.q[state, :]
+        current_s = np.where(state == 1)[0][0]
+        current_q = self.q[current_s,:]
         if self.rand_generator.rand() < self.epsilon:
             action = self.rand_generator.randint(self.num_actions)
         else:
@@ -71,8 +73,11 @@ class QLearningAgent(BaseAgent):
         # Perform an update
         # --------------------------
         # your code here
-        target = reward + self.discount * np.max(self.q[state, :]) - self.q[self.prev_state, self.prev_action]
-        self.q[self.prev_state, self.prev_action] += self.step_size * target
+        previous_s = np.where(self.prev_state == 1)[0][0]
+#         print(previous_s, self.prev_action)
+#         print(self.q[previous_s, self.prev_action])
+        target = reward + self.discount * np.max(self.q[current_s, :]) - self.q[previous_s, self.prev_action]
+        self.q[previous_s, self.prev_action] += self.step_size * target
         
         # --------------------------
         
@@ -89,8 +94,9 @@ class QLearningAgent(BaseAgent):
         # Perform the last update in the episode
         # --------------------------
         # your code here
-        target = reward - self.q[self.prev_state, self.prev_action]
-        self.q[self.prev_state, self.prev_action] += self.step_size * target
+        previous_s = np.where(self.prev_state == 1)[0][0]
+        target = reward - self.q[previous_s, self.prev_action]
+        self.q[previous_s, self.prev_action] += self.step_size * target
         
         
         # --------------------------
