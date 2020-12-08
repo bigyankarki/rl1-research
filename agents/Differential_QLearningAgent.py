@@ -52,7 +52,7 @@ class Differential_QLearningAgent(BaseAgent):
         self.prev_action = action
         return action
     
-    def agent_step(self, reward, observation):
+    def agent_step(self, reward, observation, num_steps):
         """A step taken by the agent.
         Args:
             reward (float): the reward received for taking the last action taken

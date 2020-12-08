@@ -1,7 +1,7 @@
 from agents.base_agent import BaseAgent
 import numpy as np
 
-class QLearningAgent(BaseAgent):
+class J_Differential_QLearningAgent(BaseAgent):
     def agent_init(self, agent_init_info):
         """Setup for the agent called when the experiment first starts.
         
@@ -19,10 +19,11 @@ class QLearningAgent(BaseAgent):
         # Store the parameters provided in agent_init_info.
         self.num_actions = agent_init_info["num_actions"]
         self.num_states = agent_init_info["num_states"]
-        self.epsilon = agent_init_info["epsilon"]
         self.step_size = agent_init_info["step_size"]
-        self.discount = agent_init_info["discount"]
+        self.beta = agent_init_info["beta"]
         self.rand_generator = np.random.RandomState(agent_init_info["seed"])
+        
+        self.average_reward = 0
         
         # Create an array for action-value estimates and initialize it to zero.
         self.q = np.zeros((self.num_states, self.num_actions)) # The array of action-value estimates.
@@ -42,10 +43,9 @@ class QLearningAgent(BaseAgent):
         state = observation
         current_s = np.where(state == 1)[0][0]
         current_q = self.q[current_s,:]
-        if self.rand_generator.rand() < self.epsilon:
-            action = self.rand_generator.randint(self.num_actions)
-        else:
-            action = self.argmax(current_q)
+        
+        # choose a greedy action
+        action = self.argmax(current_q)
         self.prev_state = state
         self.prev_action = action
         return action
@@ -61,23 +61,24 @@ class QLearningAgent(BaseAgent):
             action (int): the action the agent is taking.
         """
         
+        
         # Choose action using epsilon greedy.
         state = observation
         current_s = np.where(state == 1)[0][0]
         current_q = self.q[current_s,:]
-        if self.rand_generator.rand() < self.epsilon:
-            action = self.rand_generator.randint(self.num_actions)
-        else:
-            action = self.argmax(current_q)
+        
+        # choose a greedy action
+        action = self.argmax(current_q)
         
         # Perform an update
-        # --------------------------
-        # your code here
         previous_s = np.where(self.prev_state == 1)[0][0]
-#         print(previous_s, self.prev_action)
-#         print(self.q[previous_s, self.prev_action])
-        target = reward + self.discount * np.max(self.q[current_s, :]) - self.q[previous_s, self.prev_action]
+        
+        # Add bonus term to average reward 
+        self.average_reward += 5/np.sqrt(num_steps)
+        
+        target = reward - self.average_reward + np.max(self.q[current_s, :]) - self.q[previous_s, self.prev_action]
         self.q[previous_s, self.prev_action] += self.step_size * target
+        self.average_reward += self.beta * target
         
         # --------------------------
         
@@ -92,11 +93,14 @@ class QLearningAgent(BaseAgent):
                 terminal state.
         """
         # Perform the last update in the episode
-        # --------------------------
-        # your code here
         previous_s = np.where(self.prev_state == 1)[0][0]
-        target = reward - self.q[previous_s, self.prev_action]
+        
+        # update average reward here
+        self.average_reward += 5/np.sqrt(num_steps)
+        
+        target = reward - self.average_reward - self.q[previous_s, self.prev_action]
         self.q[previous_s, self.prev_action] += self.step_size * target
+        self.average_reward += self.beta * target
         
         
         # --------------------------
