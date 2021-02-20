@@ -134,7 +134,7 @@ class RLGlue:
             roat = (reward, last_state, None, term)
         else:
             self.num_steps += 1
-            self.last_action = self.agent.agent_step(reward, last_state)
+            self.last_action = self.agent.agent_step(reward, last_state, self.rl_num_steps())
             roat = (reward, last_state, self.last_action, term)
 
         return roat

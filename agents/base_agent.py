@@ -64,3 +64,23 @@ class BaseAgent:
         Returns:
             The response (or answer) to the message.
         """
+        
+    def get_representation(self, observation, action=-1):
+        """returns the representation.
+        Args:
+            observation (ndarray)  : the observation to be processed
+            action (int)            : if -1, assumes state values are being used and returns the representation as is
+                                     otherwise returns a copy of the representation at the index specified by the action
+                                     e.g., ([1,2], 1) returns [0,0,1,2,0,0] for self.num_actions=3
+                                          ([1,2],-1) returns [1,2]
+                                     (note: discrete actions assumed)
+        Returns:
+            rep : ndarray
+                the representation vector
+        """
+        if action == -1:
+            return observation
+        else:
+            rep = np.zeros(self.num_states * self.num_actions)
+            rep[self.num_states * action: self.num_states * (action + 1)] = observation
+            return rep

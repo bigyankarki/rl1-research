@@ -1,7 +1,7 @@
 from agents.base_agent import BaseAgent
 import numpy as np
 
-class QLearningAgent(BaseAgent):
+class Differential_QLearningAgent(BaseAgent):
     def agent_init(self, agent_init_info):
         """Setup for the agent called when the experiment first starts.
         
@@ -21,8 +21,10 @@ class QLearningAgent(BaseAgent):
         self.num_states = agent_init_info["num_states"]
         self.epsilon = agent_init_info["epsilon"]
         self.step_size = agent_init_info["step_size"]
-        self.discount = agent_init_info["discount"]
+        self.beta = agent_init_info["beta"]
         self.rand_generator = np.random.RandomState(agent_init_info["seed"])
+        
+        self.average_reward = 0
         
         # Create an array for action-value estimates and initialize it to zero.
         self.q = np.zeros((self.num_states, self.num_actions)) # The array of action-value estimates.
@@ -71,13 +73,10 @@ class QLearningAgent(BaseAgent):
             action = self.argmax(current_q)
         
         # Perform an update
-        # --------------------------
-        # your code here
         previous_s = np.where(self.prev_state == 1)[0][0]
-#         print(previous_s, self.prev_action)
-#         print(self.q[previous_s, self.prev_action])
-        target = reward + self.discount * np.max(self.q[current_s, :]) - self.q[previous_s, self.prev_action]
+        target = reward - self.average_reward + np.max(self.q[current_s, :]) - self.q[previous_s, self.prev_action]
         self.q[previous_s, self.prev_action] += self.step_size * target
+        self.average_reward += self.beta * target
         
         # --------------------------
         
@@ -95,8 +94,9 @@ class QLearningAgent(BaseAgent):
         # --------------------------
         # your code here
         previous_s = np.where(self.prev_state == 1)[0][0]
-        target = reward - self.q[previous_s, self.prev_action]
+        target = reward - self.average_reward - self.q[previous_s, self.prev_action]
         self.q[previous_s, self.prev_action] += self.step_size * target
+        self.average_reward += self.beta * target
         
         
         # --------------------------
